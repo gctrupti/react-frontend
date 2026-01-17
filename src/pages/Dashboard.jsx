@@ -7,105 +7,145 @@ function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingTasks, setLoadingTasks] = useState(true);
 
-  // 🔒 Protect route + fetch tasks
+
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/");
-    } else {
-      fetchTasks();
-    }
-  }, [navigate]);
+    if (!token) navigate("/");
+    fetchTasks();
+  }, []);
 
-  // 📋 Fetch tasks
   const fetchTasks = async () => {
-    try {
-      const res = await API.get("/tasks");
-      setTasks(res.data);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to load tasks");
-    }
-  };
+  try {
+    setLoadingTasks(true);
+    const res = await API.get("/tasks");
+    setTasks(res.data);
+  } catch {
+    alert("Failed to load tasks");
+  } finally {
+    setLoadingTasks(false);
+  }
+};
 
-  // ➕ Create task
+
   const createTask = async () => {
-    if (!title.trim()) {
-      alert("Task title required");
-      return;
-    }
-
+    if (!title.trim()) return;
+    setLoading(true);
     try {
-      setLoading(true);
       await API.post("/tasks", { title });
       setTitle("");
       fetchTasks();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create task");
     } finally {
       setLoading(false);
     }
   };
+  const toggleTask = async (id) => {
+  try {
+    await API.patch(`/tasks/${id}`);
+    fetchTasks();
+  } catch {
+    alert("Failed to update task");
+  }
+};
 
-  // 🗑️ Delete task
+
   const deleteTask = async (id) => {
-    try {
-      await API.delete(`/tasks/${id}`);
-      fetchTasks();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to delete task");
-    }
+    await API.delete(`/tasks/${id}`);
+    fetchTasks();
   };
 
-  // 🔓 Logout
-  const handleLogout = () => {
+  const logout = () => {
     localStorage.removeItem("token");
     navigate("/");
   };
 
   return (
-    <div style={{ padding: "40px", maxWidth: "600px", margin: "auto" }}>
-      <h1>Task Dashboard</h1>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="max-w-3xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">
+            Task Dashboard
+          </h1>
+          <button
+            onClick={logout}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+          >
+            Logout
+          </button>
+        </div>
 
-      <button onClick={handleLogout} style={{ float: "right" }}>
-        Logout
-      </button>
+        {/* Add Task */}
+        <div className="bg-white p-4 rounded-lg shadow mb-6 flex gap-3">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="What do you need to do?"
+            className="flex-1 border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={createTask}
+            disabled={loading}
+            className="bg-blue-600 text-white px-6 rounded hover:bg-blue-700 transition"
+          >
+            {loading ? "Adding..." : "Add"}
+          </button>
+        </div>
 
-      <hr />
+        {/* Task List */}
+        {loadingTasks ? (
+  // 🔄 Loading skeleton
+  <div className="space-y-3">
+    {[1, 2, 3].map((i) => (
+      <div
+        key={i}
+        className="h-12 bg-gray-200 rounded animate-pulse"
+      ></div>
+    ))}
+  </div>
+) : tasks.length === 0 ? (
+  // 📭 Empty state
+  <p className="text-center text-gray-500">
+    No tasks yet. Add one above 👆
+  </p>
+) : (
+  // ✅ Task list
+  <div className="grid gap-4">
+    {tasks.map((task) => (
+      <div
+        key={task._id}
+        className="bg-white p-4 rounded-lg shadow flex justify-between items-center hover:shadow-md transition"
+      >
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={task.completed}
+            onChange={() => toggleTask(task._id)}
+            className="w-4 h-4"
+          />
+          <span
+            className={`${
+              task.completed
+                ? "line-through text-gray-400"
+                : "text-gray-800"
+            }`}
+          >
+            {task.title}
+          </span>
+        </div>
 
-      {/* ➕ Add Task */}
-      <div style={{ marginBottom: "20px" }}>
-        <input
-          placeholder="Enter new task"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <button onClick={createTask} disabled={loading}>
-          {loading ? "Adding..." : "Add Task"}
-        </button>
+                <button
+                  onClick={() => deleteTask(task._id)}
+                  className="text-red-500 hover:text-red-700 font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* 📋 Task List */}
-      {tasks.length === 0 ? (
-        <p>No tasks yet</p>
-      ) : (
-        <ul>
-          {tasks.map((task) => (
-            <li key={task._id} style={{ marginBottom: "10px" }}>
-              {task.title}
-              <button
-                onClick={() => deleteTask(task._id)}
-                style={{ marginLeft: "10px" }}
-              >
-                ❌
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

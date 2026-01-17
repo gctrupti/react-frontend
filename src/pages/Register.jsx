@@ -1,24 +1,34 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../services/api";
 
-function Login() {
+function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
-  const handleLogin = async () => {
-    if (!email || !password) return alert("Fill all fields");
+  const handleRegister = async () => {
+    if (!name || !email || !password) {
+      alert("All fields are required");
+      return;
+    }
 
     try {
       setLoading(true);
-      const res = await API.post("/auth/login", { email, password });
 
-      localStorage.setItem("token", res.data.token);
-      navigate("/dashboard");
+      await API.post("/auth/register", {
+        name,
+        email,
+        password,
+      });
+
+      alert("Registration successful 🎉 Please login");
+      navigate("/");
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+      alert(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -28,10 +38,18 @@ function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h2 className="text-2xl font-bold text-center mb-6">
-          Login to Mention App
+          Create your account
         </h2>
 
         <div className="space-y-4">
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
           <input
             type="email"
             placeholder="Email"
@@ -49,16 +67,23 @@ function Login() {
           />
 
           <button
-            onClick={handleLogin}
+            onClick={handleRegister}
             disabled={loading}
             className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Creating account..." : "Register"}
           </button>
         </div>
+
+        <p className="text-center text-sm mt-4">
+          Already have an account?{" "}
+          <Link to="/" className="text-blue-600 font-medium hover:underline">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Register;
