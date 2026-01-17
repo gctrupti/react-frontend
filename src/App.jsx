@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -7,14 +7,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Default route → Register */}
-        <Route path="/" element={<Navigate to="/register" />} />
+        {/* Default page */}
+        <Route path="/" element={<Register />} />
 
-        {/* Auth routes */}
-        <Route path="/register" element={<Register />} />
+        {/* Auth */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-        {/* Dashboard */}
+        {/* Protected */}
         <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
     </BrowserRouter>

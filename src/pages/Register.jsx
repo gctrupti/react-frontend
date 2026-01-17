@@ -26,7 +26,7 @@ function Register() {
       });
 
       alert("Registration successful 🎉 Please login");
-      navigate("/");
+      navigate("/login");
 
 
     } catch (err) {
