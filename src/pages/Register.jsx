@@ -26,7 +26,8 @@ function Register() {
       });
 
       alert("Registration successful 🎉 Please login");
-      navigate("/");
+      navigate("/login");
+
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
     } finally {
